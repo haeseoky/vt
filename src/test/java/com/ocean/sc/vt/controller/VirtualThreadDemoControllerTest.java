@@ -89,6 +89,57 @@ class VirtualThreadDemoControllerTest {
     }
 
     @Test
+    @DisplayName("Virtual Thread AOP API - 정상 응답 테스트")
+    void virtualThreadAopApi_Success() throws Exception {
+        // when & then
+        mockMvc.perform(get("/api/demo/virtual-aop")
+                        .param("message", "HelloAOP"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Virtual Thread (AOP) Result")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("HELLOANOP"))) // 대문자 변환 확인
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Thread")));
+    }
+
+    @Test
+    @DisplayName("Virtual Thread AOP API - 기본값 테스트")
+    void virtualThreadAopApi_DefaultValue() throws Exception {
+        // when & then
+        mockMvc.perform(get("/api/demo/virtual-aop"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("VIRTUALAOP")));
+    }
+
+    @Test
+    @DisplayName("AOP 방식 vs Callable 방식 - 응답 시간 비교")
+    void compareAopVsCallable() throws Exception {
+        // Callable 방식 측정
+        long callableStart = System.currentTimeMillis();
+        MvcResult mvcResult = mockMvc.perform(get("/api/demo/virtual")
+                        .param("message", "CompareTest"))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+        mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isOk());
+        long callableDuration = System.currentTimeMillis() - callableStart;
+
+        // AOP 방식 측정
+        long aopStart = System.currentTimeMillis();
+        mockMvc.perform(get("/api/demo/virtual-aop")
+                        .param("message", "CompareTest"))
+                .andExpect(status().isOk());
+        long aopDuration = System.currentTimeMillis() - aopStart;
+
+        // then - 둘 다 최소 1초 이상 소요
+        assertThat(callableDuration).isGreaterThanOrEqualTo(1000);
+        assertThat(aopDuration).isGreaterThanOrEqualTo(1000);
+
+        System.out.println("Callable Duration: " + callableDuration + "ms");
+        System.out.println("AOP Duration: " + aopDuration + "ms");
+    }
+
+    @Test
     @DisplayName("Thread Info API - 스레드 정보 조회")
     void threadInfoApi_Success() throws Exception {
         // when & then

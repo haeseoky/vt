@@ -1,7 +1,9 @@
 package com.ocean.sc.vt.config;
 
 import org.slf4j.MDC;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.TaskDecorator;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
@@ -11,14 +13,21 @@ import java.util.Map;
 
 /**
  * Virtual Thread 설정 클래스
- * - Callable을 반환하는 Controller 메서드에 대해 Virtual Thread 적용
+ * - 두 가지 방식 지원:
+ *   1. Callable 반환 방식 (WebMvcConfigurer)
+ *   2. @VirtualThread 어노테이션 방식 (AOP)
  * - MDC(Mapped Diagnostic Context) 복사를 통한 로그 추적 지원
  */
 @Configuration
 public class VirtualThreadConfig implements WebMvcConfigurer {
 
-    @Override
-    public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
+    /**
+     * Virtual Thread Executor Bean 생성
+     * - @VirtualThread 어노테이션에서 사용
+     * - Callable 방식에서도 재사용
+     */
+    @Bean
+    public AsyncTaskExecutor virtualThreadExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 
         // Virtual Thread 활성화 (Java 21+)
@@ -27,10 +36,22 @@ public class VirtualThreadConfig implements WebMvcConfigurer {
         // MDC 복사를 위한 TaskDecorator 설정
         executor.setTaskDecorator(new MdcTaskDecorator());
 
+        // Bean 이름 설정
+        executor.setThreadNamePrefix("VirtualThread-");
+
         executor.initialize();
 
+        return executor;
+    }
+
+    /**
+     * WebMvc 비동기 지원 설정
+     * - Callable 반환 방식에서 사용
+     */
+    @Override
+    public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
         // Callable 리턴 시 사용할 TaskExecutor 설정
-        configurer.setTaskExecutor(executor);
+        configurer.setTaskExecutor(virtualThreadExecutor());
 
         // 타임아웃 설정 (30초)
         configurer.setDefaultTimeout(30000);

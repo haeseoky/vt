@@ -1,5 +1,6 @@
 package com.ocean.sc.vt.controller;
 
+import com.ocean.sc.vt.annotation.VirtualThread;
 import com.ocean.sc.vt.service.DemoService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,6 +70,28 @@ public class VirtualThreadDemoController {
             log.info("===== [Virtual Thread API] 요청 완료 =====");
             return String.format("Virtual Thread Result: %s", result);
         };
+    }
+
+    /**
+     * [Virtual Thread API - AOP] @VirtualThread 어노테이션 사용
+     * - @VirtualThread 어노테이션을 통해 Virtual Thread에서 실행
+     * - Callable 반환 없이 일반 메서드처럼 사용 가능 (코드 변경 최소화)
+     * - AOP Aspect가 자동으로 Virtual Thread로 실행 처리
+     * - 1초 동안 대기해도 Tomcat 스레드는 Block되지 않음
+     *
+     * 테스트: curl "http://localhost:8080/api/demo/virtual-aop?message=Hello"
+     */
+    @GetMapping("/virtual-aop")
+    @VirtualThread(timeout = 30000, description = "AOP 기반 Virtual Thread 실행")
+    public String virtualThreadAopApi(@RequestParam(defaultValue = "VirtualAOP") String message) {
+        log.info("===== [Virtual Thread AOP API] 메서드 진입 =====");
+        log.info("Current Thread: {}", Thread.currentThread());
+
+        // Service에서 1초 대기 (Virtual Thread가 Block됨, Tomcat 스레드는 해방됨)
+        String result = demoService.processComplexLogic(message);
+
+        log.info("===== [Virtual Thread AOP API] 메서드 완료 =====");
+        return String.format("Virtual Thread (AOP) Result: %s", result);
     }
 
     /**
