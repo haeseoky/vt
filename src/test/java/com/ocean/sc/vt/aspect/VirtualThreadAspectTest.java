@@ -7,15 +7,13 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
-import org.springframework.stereotype.Component;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -166,9 +164,9 @@ class VirtualThreadAspectTest {
 
     /**
      * 테스트용 서비스 클래스
+     * - AOP 프록시가 적용될 수 있도록 public 클래스로 정의
      */
-    @Component
-    static class TestService {
+    public static class TestService {
 
         @VirtualThread
         public String virtualThreadMethod(String input) throws InterruptedException {
@@ -224,8 +222,9 @@ class VirtualThreadAspectTest {
 
     /**
      * 테스트 설정
+     * - AOP 활성화 및 TestService 빈 등록
      */
-    @Configuration
+    @TestConfiguration
     @EnableAspectJAutoProxy
     static class TestConfig {
         @Bean

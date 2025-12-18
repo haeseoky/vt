@@ -97,7 +97,7 @@ class VirtualThreadDemoControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Virtual Thread (AOP) Result")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("HELLOANOP"))) // 대문자 변환 확인
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("HELLOAOP"))) // 대문자 변환 확인
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Thread")));
     }
 

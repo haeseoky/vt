@@ -77,7 +77,11 @@ public class VirtualThreadAspect {
                 // 실제 메서드 실행
                 return joinPoint.proceed();
 
+            } catch (RuntimeException | Error e) {
+                // RuntimeException과 Error는 그대로 전파
+                throw e;
             } catch (Throwable e) {
+                // 체크 예외는 RuntimeException으로 감싸기
                 throw new RuntimeException(e);
             } finally {
                 // MDC 정리
