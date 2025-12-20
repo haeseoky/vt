@@ -75,15 +75,15 @@ public class VirtualThreadDemoController {
     /**
      * [Virtual Thread API - AOP] @VirtualThread 어노테이션 사용
      * - @VirtualThread 어노테이션을 통해 Virtual Thread에서 실행
-     * - Callable 반환 없이 일반 메서드처럼 사용 가능 (코드 변경 최소화)
-     * - AOP Aspect가 자동으로 Virtual Thread로 실행 처리
+     * - DeferredResult를 반환하여 Tomcat Thread 즉시 해방
+     * - AOP Aspect가 자동으로 DeferredResult로 감싸서 비동기 처리
      * - 1초 동안 대기해도 Tomcat 스레드는 Block되지 않음
      *
      * 테스트: curl "http://localhost:8080/api/demo/virtual-aop?message=Hello"
      */
     @GetMapping("/virtual-aop")
     @VirtualThread(timeout = 30000, description = "AOP 기반 Virtual Thread 실행")
-    public String virtualThreadAopApi(@RequestParam(defaultValue = "VirtualAOP") String message) {
+    public Object virtualThreadAopApi(@RequestParam(defaultValue = "VirtualAOP") String message) {
         log.info("===== [Virtual Thread AOP API] 메서드 진입 =====");
         log.info("Current Thread: {}", Thread.currentThread());
 
